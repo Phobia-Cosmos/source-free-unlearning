@@ -1,7 +1,7 @@
 import torch
 from torch.utils.data import Dataset, DataLoader, random_split
 
-from torchvision.datasets import CIFAR10
+from torchvision.datasets import CIFAR10, CIFAR100, ImageFolder, StanfordCars
 from torchvision.transforms import Compose, Resize, ToTensor, Normalize, Lambda
 
 import os
@@ -9,6 +9,14 @@ import os
 
 # TODO: there are lots of buggy implementation becuase of time constraints,
 #  needs to be checked after observing the experiments
+
+DEFAULT_SPLIT_SEED = 13
+
+
+def one_hot_label(label, num_classes):
+    label = torch.as_tensor(label, dtype=torch.long)
+    return torch.zeros(num_classes, dtype=torch.float).scatter_(0, label.view(1), value=1)
+
 
 def get_data_transformations(dataset_id, arch_id, one_hot=True):
     transform, target_transform = None, None
@@ -21,11 +29,25 @@ def get_data_transformations(dataset_id, arch_id, one_hot=True):
 
         if one_hot:
             target_transform = Lambda(
-                lambda y: torch.zeros(10, dtype=torch.float).scatter_(0, y.clone().detach(), value=1))
+                lambda y: one_hot_label(y, 10))
+    elif dataset_id == 'cifar100' and (arch_id == 'resnet50' or arch_id == 'resnet18'):
+        transform = Compose([
+            Resize((224, 224)),
+            ToTensor(),
+            Normalize((0.5071, 0.4867, 0.4408), (0.2675, 0.2565, 0.2761))
+        ])
+
+        if one_hot:
+            target_transform = Lambda(
+                lambda y: one_hot_label(y, 100))
     elif dataset_id == 'cifar10-act' and (arch_id == 'resnet50' or arch_id == 'resnet18'):
         if one_hot:
             target_transform = Lambda(
-                lambda y: torch.zeros(10, dtype=torch.float).scatter_(0, y.clone().detach(), value=1))
+                lambda y: one_hot_label(y, 10))
+    elif dataset_id == 'cifar100-act' and (arch_id == 'resnet50' or arch_id == 'resnet18'):
+        if one_hot:
+            target_transform = Lambda(
+                lambda y: one_hot_label(y, 100))
     return transform, target_transform
 
 
@@ -116,7 +138,8 @@ def get_core_user_loader(core_dataset, train_dataset, test_dataset, batch_size, 
     return core_loader, train_loader, test_loader
 
 
-def get_user_loader(dataset_id, arch_id, batch_size, shuffle=True, number_of_linearized_components=None):
+def get_user_loader(dataset_id, arch_id, batch_size, shuffle=True, number_of_linearized_components=None,
+                    seed=DEFAULT_SPLIT_SEED):
     user_train_dataset = None
     user_test_dataset = None
     if dataset_id == 'cifar10':

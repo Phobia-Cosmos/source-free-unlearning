@@ -1,0 +1,86 @@
+{
+  "config": {
+    "batch_size": 32,
+    "bound_test": false,
+    "bound_train": true,
+    "dataset_id": "cifar10",
+    "device_id": 0,
+    "lambda_reg": 0.0005,
+    "learning_rate": 0.001,
+    "num_perturbations": 500,
+    "perturb_scale": 0.01,
+    "retrain_epochs": 20,
+    "save_dir": "artifacts/linear_repro",
+    "seed": 13,
+    "solver": "SCS",
+    "solver_max_iters": 4000,
+    "split_rate": 0.1,
+    "train_epochs": 10
+  },
+  "metrics": {
+    "retrained": {
+      "forget_acc": 0.8688,
+      "mia_mean": 0.9352,
+      "mia_scores": [
+        0.932,
+        0.942,
+        0.934,
+        0.929,
+        0.939
+      ],
+      "num_forget_samples_used": 5000,
+      "num_test_samples_used": 5000,
+      "remaining_acc": 0.8669555555555556,
+      "test_acc": 0.858
+    },
+    "source_model": {
+      "forget_acc": 0.8716,
+      "mia_mean": 0.9339999999999999,
+      "mia_scores": [
+        0.934,
+        0.938,
+        0.931,
+        0.928,
+        0.939
+      ],
+      "num_forget_samples_used": 5000,
+      "num_test_samples_used": 5000,
+      "remaining_acc": 0.8657111111111111,
+      "test_acc": 0.8556
+    },
+    "unlearned_minus": {
+      "forget_acc": 0.849,
+      "mia_mean": 0.9272,
+      "mia_scores": [
+        0.933,
+        0.927,
+        0.924,
+        0.921,
+        0.931
+      ],
+      "num_forget_samples_used": 5000,
+      "num_test_samples_used": 5000,
+      "remaining_acc": 0.8535555555555555,
+      "test_acc": 0.8421
+    },
+    "unlearned_plus": {
+      "forget_acc": 0.8696,
+      "mia_mean": 0.9338,
+      "mia_scores": [
+        0.934,
+        0.938,
+        0.932,
+        0.927,
+        0.938
+      ],
+      "num_forget_samples_used": 5000,
+      "num_test_samples_used": 5000,
+      "remaining_acc": 0.8654666666666667,
+      "test_acc": 0.8553
+    }
+  },
+  "sdp": {
+    "sdp_objective": 4.838801086965619e-07,
+    "sdp_status": "optimal"
+  }
+}

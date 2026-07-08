@@ -71,17 +71,29 @@ def init_pretrained_model(arch_id, dataset_id, use_default=True, pretrained_mode
                     curr_in = hidden_layers[hidden_idx]
                 kid_arr.append(nn.Linear(curr_in, 10, bias=False))
                 pretrained_model = nn.Sequential(*kid_arr)
+        elif dataset_id == 'cifar100':
+            num_ftrs = pretrained_model.fc.in_features
+            pretrained_model.fc = nn.Linear(num_ftrs, 100, bias=False)
 
         if pretrained_model_path is not None:
             pretrained_model.load_state_dict(checkpoint['model_state_dict'])
     elif arch_id == 'resnet18':
         if use_default and pretrained_model_path is None:
             pretrained_model = resnet18(weights=ResNet18_Weights.DEFAULT)
+        else:
+            checkpoint = torch.load(pretrained_model_path)
+            pretrained_model = resnet18()
 
         if dataset_id == 'cifar10':
             num_ftrs = pretrained_model.fc.in_features
             if hidden_layers is None:
                 pretrained_model.fc = nn.Linear(num_ftrs, 10, bias=False)
+        elif dataset_id == 'cifar100':
+            num_ftrs = pretrained_model.fc.in_features
+            pretrained_model.fc = nn.Linear(num_ftrs, 100, bias=False)
+
+        if pretrained_model_path is not None:
+            pretrained_model.load_state_dict(checkpoint['model_state_dict'])
 
     return pretrained_model
 
@@ -161,9 +173,18 @@ def get_core_model_params(core_model_params_path, device):
     return params_to_device(core_model_state_dict, device)
 
 
-def get_trained_linear(checkpoint_path, arch_id, dataset_id, number_of_linearized_components, activation_variant=False):
+def get_trained_linear(checkpoint_path, arch_id, dataset_id, number_of_linearized_components,
+                       activation_variant=False, pretrained_model_path=None):
     checkpoint = torch.load(checkpoint_path)
-    pretrained_model = init_pretrained_model(arch_id, dataset_id)
+    if pretrained_model_path is None:
+        pretrained_model_path = checkpoint.get('pretrained_model_path')
+    use_default = pretrained_model_path is None
+    pretrained_model = init_pretrained_model(
+        arch_id,
+        dataset_id,
+        use_default=use_default,
+        pretrained_model_path=pretrained_model_path,
+    )
     feature_backbone, linearized_head_core, __ = split_model_to_feature_linear(pretrained_model,
                                                                                number_of_linearized_components, None,
                                                                                send_params_to_device=False)

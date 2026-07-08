@@ -13,6 +13,26 @@ from model import *
 from forget import *
 
 
+def get_checkpoint_model_file(checkpoint_path):
+    model_files = []
+    core_files = []
+    for file_path in os.listdir(checkpoint_path):
+        if not file_path.endswith('.pth'):
+            continue
+        if file_path.endswith('_core_model.pth'):
+            core_files.append(os.path.join(checkpoint_path, file_path))
+        elif any(tag in file_path for tag in ['_remaining_grads', '_expected_hess_diags', '_expected_hess_diags_inv', '_forgetting_update', '_grads', '_v_param']):
+            continue
+        else:
+            model_files.append(os.path.join(checkpoint_path, file_path))
+
+    if len(model_files) != 1:
+        raise RuntimeError(f'Expected exactly one model checkpoint in {checkpoint_path}, got {model_files}')
+    if len(core_files) != 1:
+        raise RuntimeError(f'Expected exactly one core-model checkpoint in {checkpoint_path}, got {core_files}')
+    return model_files[0], core_files[0]
+
+
 def set_deterministic_environment(seed=13):
     random.seed(seed)
     np.random.seed(seed)
@@ -87,6 +107,10 @@ def train_user_data(arch_id, dataset_id, number_of_linearized_components,
     best_model_epoch = -1
 
     init_checkpoint(running_loss, running_test_acc, running_train_acc, best_model_test_acc, best_model_epoch, exp_path)
+    checkpoint = get_checkpoint(exp_path)
+    checkpoint['pretrained_model_path'] = pretrained_model_path
+    checkpoint['use_default'] = use_default
+    set_checkpoint(checkpoint, exp_path)
 
     epoch = None
     for epoch in range(50):
@@ -239,24 +263,29 @@ def save_activations(arch_id, dataset_id, number_of_linearized_components, devic
 
 
 def mixed_privacy(arch_id, dataset_id, number_of_linearized_components, split_rate, checkpoint_path,
-                  device_id=0, weight_decay=0.0005, activation_variant=False):
+                  device_id=0, weight_decay=0.0005, activation_variant=False, pretrained_model_path=None):
     name_arr = [arch_id, dataset_id, 'last{}'.format(number_of_linearized_components), 'split{}'.format(split_rate)]
     exp_path = init_exp('mixed-privacy', name_arr)
 
     # loading core model and linearized model -- init in cpu
-    pretrained_model = init_pretrained_model(arch_id, dataset_id.split('-')[0])
+    use_default = pretrained_model_path is None
+    pretrained_model = init_pretrained_model(
+        arch_id,
+        dataset_id.split('-')[0],
+        use_default=use_default,
+        pretrained_model_path=pretrained_model_path,
+    )
     _, linearized_head_core, __ = split_model_to_feature_linear(pretrained_model,
                                                                 number_of_linearized_components,
                                                                 None, send_params_to_device=False)
-    path_base_name = '_'.join(os.path.split(checkpoint_path)[1].split('-'))
+    trained_model_file, core_model_file = get_checkpoint_model_file(checkpoint_path)
 
-    core_model_state_dict = get_core_model_params(os.path.join(checkpoint_path,
-                                                               '{}_core_model.pth'.format(path_base_name)),
-                                                  'cpu')
-    feature_backbone, mixed_linear = get_trained_linear(os.path.join(checkpoint_path, '{}.pth'.format(path_base_name)),
+    core_model_state_dict = get_core_model_params(core_model_file, 'cpu')
+    feature_backbone, mixed_linear = get_trained_linear(trained_model_file,
                                                         arch_id, dataset_id.split('-')[0],
                                                         number_of_linearized_components,
-                                                        activation_variant=activation_variant)
+                                                        activation_variant=activation_variant,
+                                                        pretrained_model_path=pretrained_model_path)
     del _
     del __
 
@@ -328,25 +357,27 @@ def mixed_privacy(arch_id, dataset_id, number_of_linearized_components, split_ra
 
     torch.save({
         'model_state_dict': mixed_linear.state_dict(),
+        'source_checkpoint_path': checkpoint_path,
+        'pretrained_model_path': pretrained_model_path,
     }, exp_path)
 
 
 def forget_by_diag(arch_id, dataset_id, number_of_linearized_components, split_rate, checkpoint_path,
-                   device_id=0, weight_decay=0.0005, activation_variant=False, num_iter=100):
+                   device_id=0, weight_decay=0.0005, activation_variant=False, num_iter=100,
+                   pretrained_model_path=None):
     name_arr = [arch_id, dataset_id, 'last{}'.format(number_of_linearized_components), 'split{}'.format(split_rate),
                 'iter{}'.format(num_iter)]
     exp_path = init_exp('forget-by-diag', name_arr)
 
     # loading core model and linearized model -- init in cpu
-    path_base_name = '_'.join(os.path.split(checkpoint_path)[1].split('-'))
+    trained_model_file, core_model_file = get_checkpoint_model_file(checkpoint_path)
 
-    core_model_state_dict = get_core_model_params(os.path.join(checkpoint_path,
-                                                               '{}_core_model.pth'.format(path_base_name)),
-                                                  'cpu')
-    feature_backbone, mixed_linear = get_trained_linear(os.path.join(checkpoint_path, '{}.pth'.format(path_base_name)),
+    core_model_state_dict = get_core_model_params(core_model_file, 'cpu')
+    feature_backbone, mixed_linear = get_trained_linear(trained_model_file,
                                                         arch_id, dataset_id.split('-')[0],
                                                         number_of_linearized_components,
-                                                        activation_variant=activation_variant)
+                                                        activation_variant=activation_variant,
+                                                        pretrained_model_path=pretrained_model_path)
 
     if activation_variant:
         feature_backbone = feature_backbone.to('cpu')
@@ -430,6 +461,8 @@ def forget_by_diag(arch_id, dataset_id, number_of_linearized_components, split_r
 
     torch.save({
         'model_state_dict': mixed_linear.state_dict(),
+        'source_checkpoint_path': checkpoint_path,
+        'pretrained_model_path': pretrained_model_path,
     }, exp_path)
 
 if __name__ == "__main__":
@@ -458,19 +491,23 @@ if __name__ == "__main__":
     if args.mode == 'train-user-data':
         train_user_data(args.arch_id, args.dataset_id, args.number_of_linearized_components,
                         use_default=args.use_default, pretrained_model_path=args.pretrained_model_path,
-                        device_id=args.device_id, split_rate=args.split_rate,
+                        device_id=args.device_id, split_rate=args.split_rate, weight_decay=args.weight_decay,
                         init_hidden_layers=args.init_hidden_layers, activation_variant=args.activation_variant)
     elif args.mode == 'pretrain':
+        init_hidden_layers = args.init_hidden_layers
+        if init_hidden_layers is not None:
+            init_hidden_layers = list(init_hidden_layers)
         pretrain(args.arch_id, args.dataset_id, args.split_rate, device_id=args.device_id, shuffle=True,
-                 init_hidden_layers=list(args.init_hidden_layers))
+                 init_hidden_layers=init_hidden_layers)
     elif args.mode == 'save-activations':
         save_activations(args.arch_id, args.dataset_id, args.number_of_linearized_components, device_id=args.device_id)
     elif args.mode == 'mixed-privacy':
         mixed_privacy(args.arch_id, args.dataset_id, args.number_of_linearized_components, args.split_rate,
                       args.checkpoint_path, device_id=args.device_id, weight_decay=args.weight_decay,
-                      activation_variant=args.activation_variant)
+                      activation_variant=args.activation_variant,
+                      pretrained_model_path=args.pretrained_model_path)
     elif args.mode == 'forget-by-diag':
         forget_by_diag(args.arch_id, args.dataset_id, args.number_of_linearized_components, args.split_rate,
                        args.checkpoint_path, device_id=args.device_id, weight_decay=args.weight_decay,
-                       activation_variant=args.activation_variant, num_iter=args.num_iter)
-
+                       activation_variant=args.activation_variant, num_iter=args.num_iter,
+                       pretrained_model_path=args.pretrained_model_path)

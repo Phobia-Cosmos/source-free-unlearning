@@ -1,0 +1,79 @@
+{
+  "config": {
+    "adv_max_outer_loops": 3,
+    "adv_num_adv_images": 20,
+    "adv_pgd_alpha": 0.1,
+    "adv_pgd_eps": 4.0,
+    "adv_pgd_iter": 100,
+    "adv_unlearn_lr": 0.001,
+    "bound_test": false,
+    "bound_train": false,
+    "cache_dir": "artifacts/feature_cache",
+    "dataset_id": "cifar10",
+    "device_id": 0,
+    "jit_learning_rate": 0.0003,
+    "jit_lipschitz_weighting": 0.01,
+    "jit_num_samples": 25,
+    "jit_passes": 1,
+    "l2ul_reg_lamb": 1.0,
+    "method_batch_size": 128,
+    "methods": [
+      "l2ul_official"
+    ],
+    "retrain_epochs": 20,
+    "save_dir": "artifacts/baseline_official_repro/tune_l2ul",
+    "seed": 13,
+    "source_batch_size": 32,
+    "source_learning_rate": 0.001,
+    "split_rate": 0.1,
+    "train_epochs": 10
+  },
+  "metrics": {
+    "l2ul_official": {
+      "forget_acc": 0.005,
+      "mia_mean": 0.49539999999999995,
+      "mia_scores": [
+        0.5,
+        0.494,
+        0.492,
+        0.5,
+        0.491
+      ],
+      "num_forget_samples_used": 5000,
+      "num_test_samples_used": 5000,
+      "remaining_acc": 0.0054,
+      "test_acc": 0.0061
+    },
+    "retrained": {
+      "forget_acc": 0.8254,
+      "mia_mean": 0.5002,
+      "mia_scores": [
+        0.505,
+        0.495,
+        0.501,
+        0.5,
+        0.5
+      ],
+      "num_forget_samples_used": 5000,
+      "num_test_samples_used": 5000,
+      "remaining_acc": 0.8294888888888889,
+      "test_acc": 0.8226
+    },
+    "source_model": {
+      "forget_acc": 0.851,
+      "mia_mean": 0.49160000000000004,
+      "mia_scores": [
+        0.5,
+        0.5,
+        0.491,
+        0.466,
+        0.501
+      ],
+      "num_forget_samples_used": 5000,
+      "num_test_samples_used": 5000,
+      "remaining_acc": 0.8435111111111111,
+      "test_acc": 0.8339
+    }
+  },
+  "note": "JiT is ported from jwf40/Information-Theoretic-Unlearning (lipschitz.py + forget_full_class_strategies.py); Adversarial/L2UL is ported from csm9493/L2UL (main_unlearn_cifar10_mixed_label_resnet18.py + utils.py). Both are adapted to the fixed-feature linear-classifier benchmark used in this repository."
+}

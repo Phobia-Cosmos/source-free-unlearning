@@ -1,0 +1,87 @@
+{
+  "config": {
+    "batch_size": 32,
+    "bound_test": false,
+    "bound_train": true,
+    "cache_dir": "artifacts/feature_cache",
+    "dataset_id": "cifar10",
+    "device_id": 0,
+    "lambda_reg": 0.001,
+    "learning_rate": 0.001,
+    "num_perturbations": 500,
+    "perturb_scale": 0.01,
+    "retrain_epochs": 20,
+    "save_dir": "artifacts/linear_tables",
+    "seed": 13,
+    "solver": "SCS",
+    "solver_max_iters": 4000,
+    "split_rate": 0.1,
+    "train_epochs": 10
+  },
+  "metrics": {
+    "retrained": {
+      "forget_acc": 0.8672,
+      "mia_mean": 0.93,
+      "mia_scores": [
+        0.932,
+        0.935,
+        0.925,
+        0.923,
+        0.935
+      ],
+      "num_forget_samples_used": 5000,
+      "num_test_samples_used": 5000,
+      "remaining_acc": 0.8678888888888889,
+      "test_acc": 0.8561
+    },
+    "source_model": {
+      "forget_acc": 0.8714,
+      "mia_mean": 0.9344000000000001,
+      "mia_scores": [
+        0.934,
+        0.938,
+        0.931,
+        0.929,
+        0.94
+      ],
+      "num_forget_samples_used": 5000,
+      "num_test_samples_used": 5000,
+      "remaining_acc": 0.8660444444444444,
+      "test_acc": 0.8561
+    },
+    "unlearned_minus": {
+      "forget_acc": 0.328,
+      "mia_mean": 0.7992,
+      "mia_scores": [
+        0.795,
+        0.803,
+        0.806,
+        0.795,
+        0.797
+      ],
+      "num_forget_samples_used": 5000,
+      "num_test_samples_used": 5000,
+      "remaining_acc": 0.3365111111111111,
+      "test_acc": 0.3289
+    },
+    "unlearned_plus": {
+      "forget_acc": 0.87,
+      "mia_mean": 0.9336,
+      "mia_scores": [
+        0.934,
+        0.938,
+        0.931,
+        0.929,
+        0.936
+      ],
+      "num_forget_samples_used": 5000,
+      "num_test_samples_used": 5000,
+      "remaining_acc": 0.8654666666666667,
+      "test_acc": 0.8557
+    }
+  },
+  "sdp": {
+    "sdp_objective": 5.380382688638833e-07,
+    "sdp_status": "optimal"
+  }
+}

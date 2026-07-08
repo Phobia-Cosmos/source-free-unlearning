@@ -1,0 +1,87 @@
+{
+  "config": {
+    "batch_size": 32,
+    "bound_test": false,
+    "bound_train": true,
+    "cache_dir": "artifacts/feature_cache",
+    "dataset_id": "cifar10",
+    "device_id": 0,
+    "lambda_reg": 0.0005,
+    "learning_rate": 0.001,
+    "num_perturbations": 500,
+    "perturb_scale": 0.01,
+    "retrain_epochs": 20,
+    "save_dir": "artifacts/linear_tables",
+    "seed": 13,
+    "solver": "SCS",
+    "solver_max_iters": 4000,
+    "split_rate": 0.15,
+    "train_epochs": 10
+  },
+  "metrics": {
+    "retrained": {
+      "forget_acc": 0.8653333333333333,
+      "mia_mean": 0.9297333333333333,
+      "mia_scores": [
+        0.9326666666666666,
+        0.9166666666666666,
+        0.9286666666666666,
+        0.94,
+        0.9306666666666666
+      ],
+      "num_forget_samples_used": 7500,
+      "num_test_samples_used": 7500,
+      "remaining_acc": 0.8678588235294118,
+      "test_acc": 0.8581
+    },
+    "source_model": {
+      "forget_acc": 0.87,
+      "mia_mean": 0.9285333333333334,
+      "mia_scores": [
+        0.9306666666666666,
+        0.9193333333333333,
+        0.9273333333333333,
+        0.9386666666666666,
+        0.9266666666666666
+      ],
+      "num_forget_samples_used": 7500,
+      "num_test_samples_used": 7500,
+      "remaining_acc": 0.8659764705882353,
+      "test_acc": 0.8561
+    },
+    "unlearned_minus": {
+      "forget_acc": 0.8490666666666666,
+      "mia_mean": 0.9199999999999999,
+      "mia_scores": [
+        0.9246666666666666,
+        0.9093333333333333,
+        0.9206666666666666,
+        0.932,
+        0.9133333333333333
+      ],
+      "num_forget_samples_used": 7500,
+      "num_test_samples_used": 7500,
+      "remaining_acc": 0.8533176470588235,
+      "test_acc": 0.843
+    },
+    "unlearned_plus": {
+      "forget_acc": 0.8668,
+      "mia_mean": 0.9281333333333335,
+      "mia_scores": [
+        0.9306666666666666,
+        0.9193333333333333,
+        0.9266666666666666,
+        0.9386666666666666,
+        0.9253333333333333
+      ],
+      "num_forget_samples_used": 7500,
+      "num_test_samples_used": 7500,
+      "remaining_acc": 0.8651294117647059,
+      "test_acc": 0.8549
+    }
+  },
+  "sdp": {
+    "sdp_objective": 5.022449907821997e-07,
+    "sdp_status": "optimal"
+  }
+}
